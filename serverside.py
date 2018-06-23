@@ -8,7 +8,7 @@ from PyDictionary import PyDictionary
 app = Flask(__name__)
 dictionary = PyDictionary()
 quiz_sessions = {} # Maps: {phone number : (inQuiz, quiz_name, location, num_answers_per_question, num_questions, num_correct)}
-                   # Right now we only store one quiz/location per number
+                   # Right now we only store one quiz/location per phone number, so a user cannot simultaneously be taking multiple quizzes.
 
 def definition(message_body):
     '''
@@ -83,8 +83,12 @@ def multiple_choice_quiz(number, message_body):
         location = 0
         quiz_name = message_body.split()[1].lower()
         # Print out the first four lines of the quiz file
-        quiz_file = open(quiz_name + ".quiz", "r")
-        
+        try:
+            quiz_file = open(quiz_name + ".quiz", "r")
+        except IOError:
+            response = "The quiz you have attempted to access, " + message_body.split()[1] + ", does not appear to exist in our database. Please double check the quiz name and try again."
+            return response
+
         num_answers = int(quiz_file.readline())
         location += 1
 
@@ -108,9 +112,24 @@ def multiple_choice_quiz(number, message_body):
 
     return response
 
+def process_user_request(number, message_body):
+
+    user_command = message_body.split()[0].lower()
+
+    if user_command == "define":
+        # Then we know that it is a dictionary query - pass request to dictionary function
+        resp_string = definition(message_body)
+
+    elif user_command == "quiz" or quiz_sessions[number][0]:
+        # Then we know the user either wants to start a new quiz, or has a current
+        # quiz session open.
+        resp_string = multiple_choice_quiz(number, message_body)
+
+    return resp_string
+        
+
 @app.route("/sms", methods=['POST'])
 def sms_response():
-    """Respond to incoming messages with a friendly SMS."""
     # Start our response
     
     number = request.form['From']
@@ -119,22 +138,45 @@ def sms_response():
     # print(request.form, file=sys.stderr)
     resp = MessagingResponse()
 
-    if message_body.split()[0].lower() == "define":
-        # Then we know that it is a dictionary query - handle request accordingly
-        resp_string = definition(message_body)
-
-    if message_body.split()[0].lower() == "quiz" or quiz_sessions[number][0]:
-        resp_string = multiple_choice_quiz(number, message_body)
-        
-
-    # Now we manipulate the message body accordingly
+    resp_string = process_user_request(number, message_body)
 
     # Add a message
     resp.message(resp_string)
 
     return str(resp)
     #return resp_string
+
+def testing_mode():
+
+    test_number = "+15555555555"
+    
+    while(True):
+        response = ""
+        PROMPT_COLOR = '\033[92m' # This is a green colour on my UNIX terminal
+        PROMPT_BOLD = '\033[1m'
+        PROMPT_END = '\033[0m'
+        user_input = input(PROMPT_COLOR + PROMPT_BOLD + "[SMS] >> " + PROMPT_END)
+        
+        if user_input.lower() == "quit" or user_input.lower() == "exit":
+            break
+
+        response = process_user_request(test_number, user_input)
+
+        print(response)
+
+    print("Exiting test suite")
+    return
+
 if __name__ == "__main__":
-    app.run(debug=True)
-    #instr = input("Enter a term: ")
-    #print(sms_response(instr))
+
+    if len(sys.argv) == 1:
+        # Then we have no extra arguments - run the serverside normally
+        app.run(debug=True)
+    
+    elif len(sys.argv) > 1 and sys.argv[1].lower() == "test":
+        # Then run the server in testing mode
+        testing_mode()
+
+
+
+

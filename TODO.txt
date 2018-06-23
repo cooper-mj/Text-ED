@@ -3,8 +3,22 @@
 # A file indicating the tasks left to be completed in this repository.
 # This file (roughly - with minor edits) follows the TODO.txt format suggested 
 # by Ali Karbassi at https://github.com/todotxt/todo.txt
+# Format: [DONE=X] (Priority) DATE-COMPLETED DATE-ADDED-TO-TODO || DESCRIPTION
 
-
+-------------------------------------------------------------------------------
 [X] (A) 2018—06-21 2018-06-20 || Add quiz score at the end of quiz.
-[X] (A) 2018-06-21 2018-06-20 || Fix bug that doesn’t give feedback on last question.
-[ ] (B) YYYY-MM-DD 2018-06-21 || Create user database to track extended user data beyond one quiz session.
+-------------------------------------------------------------------------------
+[X] (A) 2018-06-21 2018-06-20 || Fix bug that doesn’t give feedback on last 
+                              || question.
+-------------------------------------------------------------------------------
+[ ] (B) YYYY-MM-DD 2018-06-21 || Create user database to track extended user 
+                              || data beyond one quiz session (so that users 
+                              || can, for example, take two quizzes 
+                              || simultaneously)
+-------------------------------------------------------------------------------
+[X] (A) 2018-06-23 2018-06-22 || Create builtin test suite so that I don't 
+                              || have to SMS (and use Twilio credit) for each 
+                              || test.
+-------------------------------------------------------------------------------
+[ ] (A) YYYY-MM-DD 2018-06-22 || Documentation (functions, README, etc.)
+-------------------------------------------------------------------------------
