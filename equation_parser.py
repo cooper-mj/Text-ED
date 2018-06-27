@@ -68,24 +68,42 @@ def print_matrix(matrix):
 	for line in matrix:
 		print(line)
 
+def brackets(output_matrix, expression):
+	buflen = len(expression)
+
+	output_matrix[0] += " " + "--"  + " "*(buflen+2) + "--"
+	output_matrix[1] += " " + "| "  + " "*(buflen+2) + " |"
+	output_matrix[2] += " " + "| "  + " " + expression + " " + " |"
+	output_matrix[3] += " " + "| "  + " "*(buflen+2) + " |"
+	output_matrix[4] += " " + "--" + " "*(buflen+2) + "--"
+
+def parentheses(output_matrix, expression):
+	buflen = len(expression)
+
+	output_matrix[0] += " " + " /"  + " "*(buflen+2) + "\\ "
+	output_matrix[1] += " " + "| "  + " "*(buflen+2) + " |"
+	output_matrix[2] += " " + "| "  + " " + expression + " " + " |"
+	output_matrix[3] += " " + "| "  + " "*(buflen+2) + " |"
+	output_matrix[4] += " " + " \\" + " "*(buflen+2) + "/ "
+
 def product(output_matrix, counter, limit, equation):
 	max_buffer = max(len(counter), len(limit), len(equation))
-	PI_OFFSET = len(" ")
+	PI_LENGTH = len("_____")
 
-	output_matrix[0] += "   " + str(limit) + " " * (max_buffer-len(limit)-PI_OFFSET)
+	output_matrix[0] += "   " + str(limit) + " " * (max_buffer-len(limit)+PI_LENGTH)
 	output_matrix[1] += "  " + "_____ " + " " * max_buffer
 	output_matrix[2] += "  " + " | |  " + str(equation) + " " * (max_buffer-len(equation))
 	output_matrix[3] += "  " + " | |  " + " " * max_buffer
-	output_matrix[4] += "   " + str(counter) + " " * (max_buffer-len(counter)-PI_OFFSET)
+	output_matrix[4] += "   " + str(counter) + " " * (max_buffer-len(counter)+PI_LENGTH)
 
 def frac(output_matrix, numerator, denominator):
 	max_buffer = max(len(numerator), len(denominator))
 
-	output_matrix[0] += "  " + " " * max_buffer
-	output_matrix[1] += "   " + " " * int(((max_buffer-len(numerator))/2)) + numerator + " " * int(((max_buffer-len(numerator))/2))
+	output_matrix[0] += "  " + " " * (max_buffer+2)
+	output_matrix[1] += "   " + " " * int(((max_buffer-len(numerator))/2)) + numerator + " " * int(((max_buffer-len(numerator))/2)) + " "
 	output_matrix[2] += "  " + "-" * (max_buffer + 2)
-	output_matrix[3] += "   " + " " * int(((max_buffer-len(denominator))/2)) + denominator + " " * int(((max_buffer-len(denominator))/2))
-	output_matrix[4] += "  " + " " * max_buffer
+	output_matrix[3] += "   " + " " * int(((max_buffer-len(denominator))/2)) + denominator + " " * int(((max_buffer-len(denominator))/2)) + " "
+	output_matrix[4] += "  " + " " * (max_buffer+2)
 
 def summation(output_matrix, counter, limit, equation):
 
@@ -107,7 +125,7 @@ def integral(output_matrix, lower, upper, equation):
 	output_matrix[1] += "    |   " + " "*max_buffer
 	output_matrix[2] += "    |   " + str(equation) + " "*(max_buffer-len(equation))
 	output_matrix[3] += "    |   " + " "*max_buffer
-	output_matrix[4] += "  \-/   " + str(lower) + " "*(max_buffer-len(lower))
+	output_matrix[4] += "  \-/ " + str(lower) + " "*(max_buffer-len(lower)+2)
 
 def parser_test_mode():
 
@@ -125,10 +143,11 @@ def parser_test_mode():
 
 	print("\n")
 
-	summation(equation_matrix, "i=1", "k", "x_i")
-	integral(equation_matrix, "0", "infinity", "(1 / x) dx")
-	product(equation_matrix, "22", "334", "(1 + (x / 3)")
+	summation(equation_matrix, "i=1fsdfs", "kfdsfds", "x_i")
+	integral(equation_matrix, "0", "infinity", "(1 / fdsfdsfdsx) dx")
+	product(equation_matrix, "k", "334", "(1 + (x / 3)")
 	frac(equation_matrix, "c^2", "b + a")
+	brackets(equation_matrix, "x + 3/2")
 
 	print_matrix(equation_matrix)
 
