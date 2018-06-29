@@ -9,6 +9,8 @@ app = Flask(__name__)
 dictionary = PyDictionary()
 quiz_sessions = {} # Maps: {phone number : (inQuiz, quiz_name, location, num_answers_per_question, num_questions, num_correct)}
                    # Right now we only store one quiz/location per phone number, so a user cannot simultaneously be taking multiple quizzes.
+lesson_sessions = {} # Maps: {phone number : (inLesson, lesson_name, lesson_location)}
+
 
 def definition(message_body):
     '''
@@ -112,6 +114,69 @@ def multiple_choice_quiz(number, message_body):
 
     return response
 
+def lesson(number, message_body):
+
+    response = ""
+
+    if number in lesson_sessions.keys():
+
+        lesson_file = open(lesson_sessions[number][1] + ".lesson")
+        location = lesson_sessions[number][2]
+
+        # Skip the first *location* number of lines in the quiz
+        for i in range(location):
+            lesson_file.readline()
+
+
+        if message_body.lower() == "n" or message_body.lower() == "next":
+
+            curr_line = lesson_file.readline()
+            location += 1
+
+            while(curr_line != "-\n"):
+                response += curr_line
+                curr_line = lesson_file.readline()
+                location += 1
+
+                last_pos = lesson_file.tell()
+                # location += 1
+                testpos = lesson_file.readline()
+                if curr_line == testpos:
+                    # Quiz is over - we have reached our EOF
+                    response += "\n\nYou have reached the end of the lesson!"
+                    break
+
+        lesson_sessions[number] = (True, lesson_sessions[number][1], location)
+
+
+
+    else:
+
+        location = 0
+
+        lesson_file = open(message_body.split()[1].lower() + ".lesson")
+
+        lesson_file.readline() # Skip line containing number of sessions
+        lesson_file.readline() # Skip line containing help email address
+        location += 2
+
+        response += "Welcome to " + lesson_file.readline()[0:-1] + "!\n"
+        location += 1
+
+        lesson_file.readline() # Skip empty line
+        location += 1
+
+        curr_line = lesson_file.readline()
+        location += 1
+        while(curr_line != "-\n"):
+            response += curr_line
+            curr_line = lesson_file.readline()
+            location += 1
+
+        lesson_sessions[number] = (True, message_body.split()[1].lower(), location)
+
+    return response
+
 def process_user_request(number, message_body):
 
     user_command = message_body.split()[0].lower()
@@ -120,10 +185,13 @@ def process_user_request(number, message_body):
         # Then we know that it is a dictionary query - pass request to dictionary function
         resp_string = definition(message_body)
 
-    elif user_command == "quiz" or quiz_sessions[number][0]:
+    elif user_command == "quiz" or (number in quiz_sessions.keys() and quiz_sessions[number][0]):
         # Then we know the user either wants to start a new quiz, or has a current
         # quiz session open.
         resp_string = multiple_choice_quiz(number, message_body)
+
+    elif user_command == "lesson" or (number in lesson_sessions.keys() and lesson_sessions[number][0]):
+        resp_string = lesson(number, message_body)
 
     return resp_string
         
@@ -159,6 +227,9 @@ def testing_mode():
         
         if user_input.lower() == "quit" or user_input.lower() == "exit":
             break
+        
+        if len(user_input) == 0:
+            continue
 
         response = process_user_request(test_number, user_input)
 
