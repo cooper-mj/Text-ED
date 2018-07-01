@@ -7,10 +7,26 @@ from PyDictionary import PyDictionary
 
 app = Flask(__name__)
 dictionary = PyDictionary()
-quiz_sessions = {} # Maps: {phone number : (inQuiz, quiz_name, location, num_answers_per_question, num_questions, num_correct)}
-                   # Right now we only store one quiz/location per phone number, so a user cannot simultaneously be taking multiple quizzes.
-lesson_sessions = {} # Maps: {phone number : (inLesson, lesson_name, lesson_location)}
+quiz_sessions = {}   # Maps:
+                     # {phone number : (inQuiz, 
+                     #                  quiz_name, 
+                     #                  location, 
+                     #                  num_answers_per_question, 
+                     #                  num_questions, 
+                     #                  num_correct)
+                     # }
+                     # 
+                     # Right now we only store one quiz/location per phone number, so a user cannot simultaneously be taking multiple quizzes.
 
+lesson_sessions = {} # Maps: 
+                     # {phone number : (inLesson, 
+                     #                  lesson_name, 
+                     #                  lesson_location,
+                     #                  buffered_questions)
+                     # }
+
+help_sessions = {}    # Maps:
+                     # {phone number : inHelpSession}
 
 def definition(message_body):
     '''
@@ -133,6 +149,7 @@ def lesson(number, message_body):
 
         lesson_file = open(lesson_sessions[number][1] + ".lesson")
         location = lesson_sessions[number][2]
+        buffered_questions = lesson_sessions[number][3]
 
         # Skip the first *location* number of lines in the quiz
         for i in range(location):
@@ -157,7 +174,7 @@ def lesson(number, message_body):
                     response += "\n\nYou have reached the end of the lesson!"
                     break
 
-        lesson_sessions[number] = (True, lesson_sessions[number][1], location)
+        lesson_sessions[number] = (True, lesson_sessions[number][1], location, buffered_questions)
 
     else:
     # If not, create an entry for the user in the lesson_sessions map. Then
@@ -184,15 +201,89 @@ def lesson(number, message_body):
             curr_line = lesson_file.readline()
             location += 1
 
-        lesson_sessions[number] = (True, message_body.split()[1].lower(), location)
+        lesson_sessions[number] = (True, message_body.split()[1].lower(), location, [])
 
+    return response
+
+def blast_question(number, message_body):
+    '''
+    Takes in a phone number and a string of the format "ask [question]".
+    Blasts out a request to one other learner who is at least as far along in
+    the lesson as the person with the question, and allows them to answer.
+    '''
+
+    # TODO
+    lesson_file = open(lesson_sessions[number][1] + ".lesson")
+    lesson_file.readline() # Skip num_segments
+    lesson_file.readline() # Skip email
+    lesson_title = lesson_file.readline()
+
+    user_question = message_body[4:] # Remove the "ask" at the front of the user string
+    if user_question[-1] != "?":
+        user_question += "?"
+
+    query_message = "User " + number + " has a question about the lesson \"" + lesson_title + "\". Their question is: " + user_question + "If you wish to respond to this question, please type your response. If not, please resopnd with \"N\", and we will forward the question to another user."
+
+    asker_lesson = lesson_sessions[number][1] # We want to find someone on the same lesson
+    asker_location = lesson_sessions[number][2] # We want to find someone who is further along
+
+
+    for user in lesson_session.keys():
+        if lesson_sessions[user][1] == asker_lesson and lesson_sessions[user][2] >= asker_location:
+            # We've found someone to send the question to!
+            
+            # TODO - send the question
+            return "Your question, \"" + user_question + "\" has been forwarded to another user who has already completed this segment of the lesson. When they respond, we will route their response back to you."
+
+    return "We are not able to find a peer to answer your question at this time."
+    # TODO - repeatedly check to see if someone is available
+
+def help_dialogue(number, message_body):
+    response = ""
+
+    if number in help_sessions.keys():
+        
+        if message_body.lower() == "quit":
+            # Exit the help session
+            del help_sessions[number]
+            response = "Exiting help session."
+        
+        elif message_body.lower() == "define":
+            response = "The command \"define [word]\" returns a definition of the word \"word\"."
+        
+        elif message_body.lower() == "quiz":
+            response = "The \"quiz [quiz name]\" command opens an interactive session with the multiple-choice-quiz \"quiz name\". Once a question (with responses) appears, type the letter of the answer for feedback and for the next question."
+        
+        elif message_body.lower() == "lesson":
+            response = "The \"lesson [lesson name]\" command opens an interactive session with the lesso \"lesson name\". To move from one lesson segment to the next, type \"N\". You can ask questions during a lesson with the \"ask\" command."
+        
+        elif message_body.lower() == "ask":
+            response = "The \"ask [question]\" command broadcasts your question to other users who are farther along in the lesson you are working on. When they send an answer to your question, we forward it to you."
+
+
+
+    else:
+        help_sessions[number] = True
+        response = '''
+        Below is a list of commands that you can use with the Text-ED system:
+        define [word]
+        quiz [quiz name]
+        lesson [lesson name]
+            ask [question]
+        help
+
+        For more help with any of these commands, please simply type the name of the command. Or, to end your help session, type "quit".
+        '''
     return response
 
 def process_user_request(number, message_body):
 
     user_command = message_body.split()[0].lower()
 
-    if user_command == "define":
+    if user_command == "help" or number in help_sessions.keys():
+        resp_string = help_dialogue(number, message_body)
+
+    elif user_command == "define":
         # Then we know that it is a dictionary query - pass request to dictionary function
         resp_string = definition(message_body)
 
@@ -201,8 +292,15 @@ def process_user_request(number, message_body):
         # quiz session open.
         resp_string = multiple_choice_quiz(number, message_body)
 
+    elif user_command == "ask" and (number in lesson_sessions.keys() and lesson_sessions[number][0]):
+        print("HERE")
+        resp_string = blast_question(number, message_body)
+
     elif user_command == "lesson" or (number in lesson_sessions.keys() and lesson_sessions[number][0]):
+        print("LESSON")
         resp_string = lesson(number, message_body)
+
+
 
     return resp_string
         
@@ -234,7 +332,7 @@ def testing_mode(test_number="+15555555555"):
         PROMPT_END = '\033[0m'
         user_input = input(PROMPT_COLOR + PROMPT_BOLD + "[SMS] >> " + PROMPT_END)
         
-        if user_input.lower() == "quit" or user_input.lower() == "exit":
+        if user_input.lower() == "quit()" or user_input.lower() == "exit()":
             break
         
         if len(user_input) == 0:
