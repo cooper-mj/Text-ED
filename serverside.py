@@ -115,10 +115,21 @@ def multiple_choice_quiz(number, message_body):
     return response
 
 def lesson(number, message_body):
+    '''
+    Reads through an interactive lesson. It reads
+    incrementally from the lesson file, where the user types "N" to advance
+    from one lesson segment to another.
+
+    To add: Q&A feature, where, if someone has a question about a speciic
+    lesson, it pushes the question to other students who have advanced past
+    that location on the same lesson, and allows them to respond.
+    '''
 
     response = ""
 
     if number in lesson_sessions.keys():
+    # If there is a lesson in session, continue reading from the location
+    # that the user is at.
 
         lesson_file = open(lesson_sessions[number][1] + ".lesson")
         location = lesson_sessions[number][2]
@@ -148,9 +159,9 @@ def lesson(number, message_body):
 
         lesson_sessions[number] = (True, lesson_sessions[number][1], location)
 
-
-
     else:
+    # If not, create an entry for the user in the lesson_sessions map. Then
+    # read the first lesson segment for the user.
 
         location = 0
 
@@ -214,9 +225,7 @@ def sms_response():
     return str(resp)
     #return resp_string
 
-def testing_mode():
-
-    test_number = "+15555555555"
+def testing_mode(test_number="+15555555555"):
     
     while(True):
         response = ""
@@ -246,7 +255,12 @@ if __name__ == "__main__":
     
     elif len(sys.argv) > 1 and sys.argv[1].lower() == "test":
         # Then run the server in testing mode
-        testing_mode()
+        if len(sys.argv) > 2:
+            # Assume the second argument is a number to test from
+            testing_mode(sys.argv[2])
+        else:
+            testing_mode()
+
 
 
 
