@@ -38,15 +38,6 @@ integral(lower, upper, equation)
 	\-/ lower
 
 
-
-## The following have yet to be implemented
-
-exp(base, pow)
-
-        pow
-    base
-
-
 parentheses(expression)
 	
 	--              --                 /              \ 
@@ -56,13 +47,37 @@ parentheses(expression)
 	--              --                 \              / 
 
 
-times(num1, num2)
+mathematical_operation(op)
 
-	num1 x num2
+	[num1] op [num2]
+
+
+exp(base, pow)
+
+        pow
+    base
 
 '''
 
 import sys
+
+def exp(output_matrix, base, exp):
+
+	# +1 instead of -1 to account for spacing on the ends of the characters
+	output_matrix[0] += " "*(len(base) + len(exp) + 1)
+	output_matrix[1] += " "*len(base) + exp + " "
+	output_matrix[2] += " " + base + " "*len(exp)
+	output_matrix[3] += " "*(len(base) + len(exp) + 1)
+	output_matrix[4] += " "*(len(base) + len(exp) + 1)
+
+def math_ops(output_matrix, symbol):
+	buflen = len(symbol)+2
+
+	output_matrix[0] += " "*buflen
+	output_matrix[1] += " "*buflen
+	output_matrix[2] += " " + symbol + " "
+	output_matrix[3] += " "*buflen
+	output_matrix[4] += " "*buflen
 
 def print_matrix(matrix):
 	for line in matrix:
@@ -146,6 +161,8 @@ def parser_test_mode():
 	summation(equation_matrix, "i=1fsdfs", "kfdsfds", "x_i")
 	integral(equation_matrix, "0", "infinity", "(1 / fdsfdsfdsx) dx")
 	product(equation_matrix, "k", "334", "(1 + (x / 3)")
+	math_ops(equation_matrix, "+")
+	exp(equation_matrix, "20232", "10100")
 	frac(equation_matrix, "c^2", "b + a")
 	brackets(equation_matrix, "x + 3/2")
 
