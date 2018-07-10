@@ -61,6 +61,17 @@ exp(base, pow)
 
 import sys
 
+def exp_frac(output_matrix, base, exp_num, exp_denom):
+
+	# TODO - tidy this, make less use of magic numbers
+	max_buffer = max(len(exp_num), len(exp_denom))
+
+	output_matrix[0] += "   " + " " * int(((max_buffer-len(exp_num))/2)) + exp_num + " " * int(((max_buffer-len(exp_num))/2)) + " "*len(base)
+	output_matrix[1] += "  " + "-" * (max_buffer + 2)
+	output_matrix[2] += "   " + " " * int(((max_buffer-len(exp_denom))/2)) + exp_denom + " " * int(((max_buffer-len(exp_denom))/2)) + " "*len(base)
+	output_matrix[3] += " " + base + " "*max_buffer + "  "
+	output_matrix[4] += " "*(len(base) + max_buffer + 1) + "  "
+
 def exp(output_matrix, base, exp):
 
 	# +1 instead of -1 to account for spacing on the ends of the characters
@@ -162,6 +173,7 @@ def parser_test_mode():
 	integral(equation_matrix, "0", "infinity", "(1 / fdsfdsfdsx) dx")
 	product(equation_matrix, "k", "334", "(1 + (x / 3)")
 	math_ops(equation_matrix, "+")
+	exp_frac(equation_matrix, "e", "13134", "2")
 	exp(equation_matrix, "20232", "10100")
 	frac(equation_matrix, "c^2", "b + a")
 	brackets(equation_matrix, "x + 3/2")
