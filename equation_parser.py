@@ -61,6 +61,79 @@ exp(base, pow)
 
 import sys
 
+def format_argument_list(arg_list):
+	# Takes in a string of the form "arg_1, arg_2, arg_3",
+	# returns a string formatted in the form ""arg_1", "arg_2", "arg_3""
+	
+	ret_string = ""
+	for i in range(len(arg_list.split(","))):
+		token = arg_list.split(",")[i].strip()
+		ret_string += "\"" + token + "\""
+		if i != len(arg_list.split(",")) - 1:
+			# If we are on final token, don't add a comma at the end
+			ret_string += ", "
+	return ret_string
+
+
+
+
+def parse_expression(expression):
+	# TODO - specify syntax more
+	equation_matrix = [ # Make a matrix to append to as we parse the expression
+	"",
+	"",
+	"",
+	"",
+	"",
+	]
+
+	function_args = {
+	# Map mapping function names to their numbers of arguments
+	".exp_frac" : 3,
+	".exp" : 2,
+	".math_ops" : 1,
+	".brackets" : 1,
+	".parentheses" : 1,
+	".product" : 3,
+	".frac" : 2,
+	".summation" : 3,
+	".integral" : 3
+	}
+
+	mathematical_symbols = {"+", "-", "*", "/"}
+
+	tokens = list(filter(None, [i.strip() for i in expression.replace("(", ")").split(")")]))
+	nest_level = 0
+	execution_string = ""
+	for token in tokens:
+		print(token)
+		arg_counter = 0
+		num_arguments = 0
+		if token[0] in mathematical_symbols:
+			exec("math_ops(equation_matrix, " + "\"" + token[0] + "\"" + ")")
+			token = token[token.find("."):]
+
+		if nest_level != 0 and token[0] != ".":
+			#If we are in the function, we know the next token must
+			#be the arguments of the function.
+			execution_string += "equation_matrix, "
+			execution_string += format_argument_list(token) + ")"
+			nest_level -= 1
+			print("EXEC"+execution_string)
+			# Execute the function, then reset execution_string
+			exec(execution_string)
+			execution_string = ""
+
+		if token[0] == ".":
+			# Then we are beginning a new function
+			execution_string += token[1:] + "("
+			arg_counter = 0
+			nest_level += 1
+	print_matrix(equation_matrix)
+
+	
+	
+
 def exp_frac(output_matrix, base, exp_num, exp_denom):
 
 	# TODO - tidy this, make less use of magic numbers
@@ -180,6 +253,7 @@ def parser_test_mode():
 
 	print_matrix(equation_matrix)
 
+	parse_expression(".integral(x, y, 4b) + .product(x, y, z)")
 	print("\n")
 
 	return
