@@ -1,0 +1,6 @@
+# File: requirements.txt
+# Description: list of necessary dependencies for Text-ED
+
+Flask==1.0.2
+PyDictionary==1.5.2
+twilio==6.14.0
