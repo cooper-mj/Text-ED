@@ -299,8 +299,8 @@ def process_user_request(number, message_body):
     elif user_command == "lesson" or (number in lesson_sessions.keys() and lesson_sessions[number][0]):
         print("LESSON")
         resp_string = lesson(number, message_body)
-
-
+    else:
+        resp_string = "Entry not recognized. Type 'help' for a list of valid commands."
 
     return resp_string
         
